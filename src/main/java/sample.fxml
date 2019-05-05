@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="main.java.CameraController">
+    <bottom>
+        <HBox alignment="center">
+            <padding>
+                <Insets bottom="25" left="25" right="25" top="25"/>
+            </padding>
+            <children>
+                <Button fx:id="firstButton" alignment="center" onAction="#startFirstCamera" text="Start Camera"/>
+                <Button fx:id="secondButton" alignment="center" onAction="#startSecondCamera" text="Start Camera"/>
+            </children>
+        </HBox>
+    </bottom>
+    <left>
+        <ImageView fx:id="firstCurrentFrame" fitHeight="600.0" fitWidth="800.0" pickOnBounds="true" preserveRatio="true"
+                   BorderPane.alignment="CENTER"/>
+    </left>
+    <right>
+        <ImageView fx:id="secondCurrentFrame" fitHeight="600.0" fitWidth="800.0" pickOnBounds="true"
+                   preserveRatio="true"
+                   BorderPane.alignment="CENTER"/>
+    </right>
+    <top>
+        <HBox alignment="center">
+            <children>
+                <ImageView fx:id="alteredFirstFrame" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true"
+                           preserveRatio="true"
+                           BorderPane.alignment="BOTTOM_LEFT"/>
+                <ImageView fx:id="alteredSecondFrame" fitHeight="250.0" fitWidth="350.0" pickOnBounds="true"
+                           preserveRatio="true"
+                           BorderPane.alignment="BOTTOM_RIGHT"/>
+            </children>
+        </HBox>
+
+    </top>
+</BorderPane>
