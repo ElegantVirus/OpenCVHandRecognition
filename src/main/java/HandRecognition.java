@@ -20,18 +20,21 @@ import static org.opencv.imgproc.Imgproc.cvtColor;
 
 public class HandRecognition {
 
-    private static final long serialVersionUID = 1L;
     private JLabel lab = new JLabel();
 
-    private static boolean start = false;
-    private static Point finger;
+    private Point finger;
+    private List<Point> fingers;
 
-    public static Point getFinger() {
-        return finger;
+    public Point getFinger() {
+        return this.finger;
     }
 
-    public static void setFinger(Point finger) {
-        HandRecognition.finger = finger;
+    public List<Point> getFingers() {
+        return this.fingers;
+    }
+
+    public void setFinger(Point finger) {
+        this.finger = finger;
     }
 
     public HandRecognition() {
@@ -200,6 +203,7 @@ public class HandRecognition {
         pr.create((defects.size()), 1, CvType.CV_32S);
         pr.fromList(defects);
 
+        boolean start = false;
         if (pr.size().height > 0) {
             start = true;
             Imgproc.minEnclosingCircle(pr, center, radius);
@@ -212,7 +216,7 @@ public class HandRecognition {
     }
 
     public List<Point> getFingers(List<Point> outlinePoints, Point center) {
-        List<Point> fingerPoints = new LinkedList<Point>();
+        List<Point> fingerPoints = new LinkedList<>();
         List<Point> fingers = new LinkedList<Point>();
         int interval = 55;
         for (int j = 0; j < outlinePoints.size(); j++) {
@@ -332,14 +336,13 @@ public class HandRecognition {
     }
 
     public Mat getHand(Mat original) {
-        System.out.println("current thread :" + Thread.currentThread());
+//        System.out.println("current thread :" + Thread.currentThread());
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         Point center = new Point();
         Point finger = new Point();
 
-        List<Point> buffer = new LinkedList<Point>();
-        List<Point> buffered = new LinkedList<Point>();
-        List<Point> fingers;
+        List<Point> buffer = new LinkedList<>();
+        List<Point> buffered = new LinkedList<>();
 
         Mat demo = original;
 //        blur(original, demo, new Size(3, 3));
@@ -353,10 +356,11 @@ public class HandRecognition {
         List<Point> defects = defectEnvelope(original, searchOutline(original, morphological,
                 false, false, 450), true, 5);
 
+        Point current = centreOfPalm(defects);
         if (buffer.size() < 7) {
-            buffer.add(centreOfPalm(defects));
+            buffer.add(current);
         } else {
-            center = movingFilter(buffer, centreOfPalm(defects));
+            center = movingFilter(buffer, current);
         }
 
         fingers = getFingers(outlineList(morphological, 200), center);

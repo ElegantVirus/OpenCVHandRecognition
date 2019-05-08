@@ -1,14 +1,11 @@
 package main.java;
 
-import org.opencv.core.Core;
-
 import javafx.application.Application;
-import javafx.event.EventHandler;
-import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
-import javafx.fxml.FXMLLoader;
+import javafx.stage.Stage;
+import org.opencv.core.Core;
 
 /**
  * The main class for a JavaFX application. It creates and handle the main
@@ -42,12 +39,7 @@ public class Main extends Application
 
             // set the proper behavior on closing the application
             CameraController controller = loader.getController();
-            primaryStage.setOnCloseRequest((new EventHandler<WindowEvent>() {
-                public void handle(WindowEvent we)
-                {
-                    controller.setClosed();
-                }
-            }));
+            primaryStage.setOnCloseRequest((we -> controller.setClosed()));
         }
         catch (Exception e)
         {

@@ -5,11 +5,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import main.java.Utilities.Piano;
 import main.java.Utilities.Utils;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,24 +36,28 @@ public class CameraController {
     private boolean firstCameraActive = false;
     private boolean secondCameraActive = false;
     private static int FIRST_CAMERA_ID = 0;
-    HandRecognition handRecognition = new HandRecognition();
-
+    public static List<Point> front;
+    public static List<Point> side;
+    public static Point globalFront = new Point(0, 0);
+    public static Point globalSide = new Point(0, 0);
+    static int counter = 50;
     private static String SECOND_CAMERA_ID = "http://192.168.8.104:4747/video";
-    private static boolean handLow;
 
     @FXML
     private boolean startFirstCamera(ActionEvent event) {
+        HandRecognition handRecognition = new HandRecognition();
         if (!this.firstCameraActive) {
             this.firstCapture.open(FIRST_CAMERA_ID);
 
             if (this.firstCapture.isOpened()) {
-                firstCapture.set(Videoio.CAP_PROP_FRAME_WIDTH, 200);
-                firstCapture.set(Videoio.CAP_PROP_FRAME_HEIGHT, 200);
+//                firstCapture.set(Videoio.CAP_PROP_FRAME_WIDTH, 400);
+//                firstCapture.set(Videoio.CAP_PROP_FRAME_HEIGHT, 400);
                 this.firstCameraActive = true;
                 firstButton.setText("Stop");
-                grabFrame(firstCurrentFrame, alteredFirstFrame, firstCapture);
+                grabFrame(firstCurrentFrame, alteredFirstFrame, firstCapture, true, false,
+                        handRecognition);
             } else {
-                System.err.println("Neimanoma prisijungti prie kameros...");
+                System.err.println("Camera is unaccessible...");
             }
         } else {
             this.firstCameraActive = false;
@@ -62,7 +69,7 @@ public class CameraController {
 
     @FXML
     private boolean startSecondCamera(ActionEvent event) {
-
+        HandRecognition handRecognition = new HandRecognition();
         loadNecessaryLibs();
 
         if (!this.secondCameraActive) {
@@ -73,9 +80,10 @@ public class CameraController {
                 secondCapture.set(Videoio.CAP_PROP_FRAME_HEIGHT, 200);
                 this.secondCameraActive = true;
                 secondButton.setText("Stop");
-                grabFrame(secondCurrentFrame, alteredSecondFrame, secondCapture);
+                grabFrame(secondCurrentFrame, alteredSecondFrame, secondCapture, false, true,
+                        handRecognition);
             } else {
-                System.err.println("Neimanoma prisijungti prie kameros...");
+                System.err.println("Camera is unaccessible...");
             }
         } else {
             this.secondCameraActive = false;
@@ -85,38 +93,86 @@ public class CameraController {
         return this.secondCameraActive;
     }
 
+    public synchronized void resolveNote() {
+//        if (null != front)
+//            front.forEach(thing -> System.out.print("x :" + thing.x + " y : " + thing.y));
+//        System.out.println("x :" + globalFront.x);
+//        System.out.println("y :" + globalSide.y);
+        //0..640
+        if (firstCameraActive && secondCameraActive) {
+            counter--;
+            if (counter == 0) {
+                try {
+                    if (globalFront.y < 300) {
+                        System.out.println("x : " + globalFront.x);
+                        if (globalFront.x > 0 && globalFront.x < 128
+                                && globalSide.y < 180 && globalSide.y > 0) {
+                            Thread t1 = new Thread(new Piano(1));
+                            t1.start();
+                        }
+
+                        if (globalFront.x > 128 && globalFront.x < 256
+                                && globalSide.y < 250 && globalSide.y > 180) {
+                            Thread t1 = new Thread(new Piano(3));
+                            t1.start();
+                        }
+
+                        if (globalFront.x > 256 && globalFront.x < 384
+                                && globalSide.y < 300 && globalSide.y > 250) {
+                            Thread t1 = new Thread(new Piano(6));
+                            t1.start();
+                        }
+
+                        if (globalFront.x > 384 && globalFront.x < 512
+                                && globalSide.y < 450 && globalSide.y > 300) {
+                            Thread t1 = new Thread(new Piano(9));
+                            t1.start();
+                        }
+                        if (globalFront.x > 512 && globalFront.x < 640
+                                && globalSide.y < 500 && globalSide.y > 450) {
+                            Thread t1 = new Thread(new Piano(12));
+                            t1.start();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                counter = 50;
+            }
+        }
+
+    }
+
+
     private void loadNecessaryLibs() {
         System.load("D:/programs/opencv/build/x64/vc14/bin/opencv_ffmpeg401_64.dll");
     }
 
-    private void grabFrame(ImageView currentFrame, ImageView additionalFrame, VideoCapture capture) {
+    private void grabFrame(ImageView currentFrame, ImageView additionalFrame, VideoCapture capture,
+                           boolean isFront, boolean isSide, HandRecognition handRecognition) {
 
         Runnable frameGrabber = () -> {
             Mat frame = grabFrame(capture);
             Mat original = frame;
             updateImageView(currentFrame, Utils.mat2Image(original));
             Mat imageToShow = null;
-            handLow = false;
             try {
                 imageToShow = handRecognition.getHand(frame);
-
-//                if (handRecognition.getFinger().y > 450) {
-//                    handLow = true;
-////                    System.out.println("X: " + handRecognition.getFinger().x + " y: " + handRecognition.getFinger().y);
-//                }
-                // note = new Note();
-                //        Piano piano = new Piano(note);
-                //        new Thread(piano).start();
-                //
-                //        if (fingah < 200 && fingah > 0) {
-                //            System.out.println("C");
-                //            note.notify();
-                ////            Sound.playNote(1);
-                ////            player.play("C");
-                //        }
-                //     System.out.println(handLow);
+//                System.out.println(HandRecognition.getFinger().x);
+                List<Point> fingers = handRecognition.getFingers();
+                Point finger = handRecognition.getFinger();
+                if (isFront == true) {
+                    front = fingers;
+                    globalFront = finger;
+                } else {
+                    if (isSide == true) {
+                        side = fingers;
+                        globalSide = finger;
+                    }
+                }
+                resolveNote();
             } catch (Exception e) {
-                // e.printStackTrace();
+                e.printStackTrace();
             }
             if (null != additionalFrame) {
                 updateImageView(additionalFrame, Utils.mat2Image(imageToShow));
@@ -128,14 +184,6 @@ public class CameraController {
         this.timer.scheduleAtFixedRate(frameGrabber, 0, 40, TimeUnit.MILLISECONDS);
     }
 
-    private void grabX() {
-
-    }
-
-    private void grabYZ() {
-
-    }
-
     private Mat grabFrame(VideoCapture capture) {
         Mat frame = new Mat();
 
@@ -143,7 +191,7 @@ public class CameraController {
             try {
                 capture.read(frame);
             } catch (Exception e) {
-                System.err.println("Exception during the image elaboration: " + e);
+                System.err.println("Isimtis vaizdo apdorojimo metu: " + e);
             }
         }
 
